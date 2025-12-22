@@ -496,7 +496,6 @@ with col_left:
         y=hourly_df['usage_rate'],
         marker=dict(
             color='#22d3ee',
-            cornerradius=6
         ),
         name='使用率'
     ))
@@ -544,7 +543,6 @@ with col_right:
         y=daily_df['usage_rate'],
         marker=dict(
             color=colors,
-            cornerradius=6
         ),
         name='使用率'
     ))
