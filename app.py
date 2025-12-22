@@ -333,6 +333,12 @@ df['is_weekend'] = df['day_of_week'].isin([1, 7])  # 1=Sunday, 7=Saturday
 weekday_avg = df[~df['is_weekend']]['usage_rate'].mean()
 weekend_avg = df[df['is_weekend']]['usage_rate'].mean()
 
+# 處理 NaN 情況（如果選取範圍內沒有週間或週末資料）
+if pd.isna(weekday_avg):
+    weekday_avg = 0
+if pd.isna(weekend_avg):
+    weekend_avg = 0
+
 # ===== 關鍵指標卡片 =====
 col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -385,22 +391,6 @@ with col5:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ===== Plotly 圖表配置 =====
-plotly_layout = dict(
-    paper_bgcolor='#1e293b',
-    plot_bgcolor='#1e293b',
-    font=dict(color='#94a3b8'),
-    margin=dict(l=40, r=40, t=40, b=40),
-    xaxis=dict(
-        gridcolor='rgba(51, 65, 85, 0.5)',
-        zerolinecolor='rgba(51, 65, 85, 0.5)'
-    ),
-    yaxis=dict(
-        gridcolor='rgba(51, 65, 85, 0.5)',
-        zerolinecolor='rgba(51, 65, 85, 0.5)'
-    )
-)
-
 # ===== 根據時間粒度聚合資料 =====
 granularity_map = {
     "5 分鐘": "5min",
@@ -437,12 +427,20 @@ if display_metric == "剩餘車位":
         name='剩餘車位'
     ))
     fig_main.update_layout(
-        **plotly_layout,
+        paper_bgcolor='#1e293b',
+        plot_bgcolor='#1e293b',
+        font=dict(color='#94a3b8'),
+        margin=dict(l=40, r=40, t=40, b=40),
         height=400,
         yaxis_title='剩餘車位',
         xaxis_title='時間',
+        xaxis=dict(
+            gridcolor='rgba(51, 65, 85, 0.5)',
+            zerolinecolor='rgba(51, 65, 85, 0.5)'
+        ),
         yaxis=dict(
             gridcolor='rgba(51, 65, 85, 0.5)',
+            zerolinecolor='rgba(51, 65, 85, 0.5)',
             range=[0, total_cars * 1.1]
         ),
         hovermode='x unified'
@@ -459,12 +457,20 @@ else:
         name='使用率'
     ))
     fig_main.update_layout(
-        **plotly_layout,
+        paper_bgcolor='#1e293b',
+        plot_bgcolor='#1e293b',
+        font=dict(color='#94a3b8'),
+        margin=dict(l=40, r=40, t=40, b=40),
         height=400,
         yaxis_title='使用率 (%)',
         xaxis_title='時間',
+        xaxis=dict(
+            gridcolor='rgba(51, 65, 85, 0.5)',
+            zerolinecolor='rgba(51, 65, 85, 0.5)'
+        ),
         yaxis=dict(
             gridcolor='rgba(51, 65, 85, 0.5)',
+            zerolinecolor='rgba(51, 65, 85, 0.5)',
             range=[0, 105]
         ),
         hovermode='x unified'
@@ -495,7 +501,10 @@ with col_left:
         name='使用率'
     ))
     fig_hourly.update_layout(
-        **plotly_layout,
+        paper_bgcolor='#1e293b',
+        plot_bgcolor='#1e293b',
+        font=dict(color='#94a3b8'),
+        margin=dict(l=40, r=40, t=40, b=40),
         height=350,
         yaxis_title='平均使用率 (%)',
         xaxis_title='小時',
@@ -540,7 +549,10 @@ with col_right:
         name='使用率'
     ))
     fig_daily.update_layout(
-        **plotly_layout,
+        paper_bgcolor='#1e293b',
+        plot_bgcolor='#1e293b',
+        font=dict(color='#94a3b8'),
+        margin=dict(l=40, r=40, t=40, b=40),
         height=350,
         yaxis_title='平均使用率 (%)',
         xaxis_title='日期',
@@ -593,7 +605,10 @@ fig_heatmap = go.Figure(data=go.Heatmap(
 ))
 
 fig_heatmap.update_layout(
-    **plotly_layout,
+    paper_bgcolor='#1e293b',
+    plot_bgcolor='#1e293b',
+    font=dict(color='#94a3b8'),
+    margin=dict(l=40, r=40, t=40, b=40),
     height=max(300, len(heatmap_pivot) * 25),
     xaxis_title='小時',
     yaxis_title='日期',
@@ -645,36 +660,40 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 計算週間和週末的每小時平均
-df['is_weekend'] = df['day_of_week'].isin([1, 7])
 weekday_hourly = df[~df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
 weekend_hourly = df[df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
 
 fig_ww = go.Figure()
 
 # 週間曲線
-fig_ww.add_trace(go.Scatter(
-    x=weekday_hourly['hour'],
-    y=weekday_hourly['usage_rate'],
-    mode='lines',
-    fill='tozeroy',
-    line=dict(color='#22d3ee', width=2),
-    fillcolor='rgba(34, 211, 238, 0.1)',
-    name='週間平均'
-))
+if not weekday_hourly.empty:
+    fig_ww.add_trace(go.Scatter(
+        x=weekday_hourly['hour'],
+        y=weekday_hourly['usage_rate'],
+        mode='lines',
+        fill='tozeroy',
+        line=dict(color='#22d3ee', width=2),
+        fillcolor='rgba(34, 211, 238, 0.1)',
+        name='週間平均'
+    ))
 
 # 週末曲線
-fig_ww.add_trace(go.Scatter(
-    x=weekend_hourly['hour'],
-    y=weekend_hourly['usage_rate'],
-    mode='lines',
-    fill='tozeroy',
-    line=dict(color='#a78bfa', width=2),
-    fillcolor='rgba(167, 139, 250, 0.1)',
-    name='週末平均'
-))
+if not weekend_hourly.empty:
+    fig_ww.add_trace(go.Scatter(
+        x=weekend_hourly['hour'],
+        y=weekend_hourly['usage_rate'],
+        mode='lines',
+        fill='tozeroy',
+        line=dict(color='#a78bfa', width=2),
+        fillcolor='rgba(167, 139, 250, 0.1)',
+        name='週末平均'
+    ))
 
 fig_ww.update_layout(
-    **plotly_layout,
+    paper_bgcolor='#1e293b',
+    plot_bgcolor='#1e293b',
+    font=dict(color='#94a3b8'),
+    margin=dict(l=40, r=40, t=40, b=40),
     height=350,
     xaxis_title='小時',
     yaxis_title='使用率 (%)',
