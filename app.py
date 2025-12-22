@@ -27,7 +27,7 @@ client = get_bigquery_client()
 @st.cache_data(ttl=3600)
 def get_parking_lots():
     query = """
-    SELECT id, name, area, total_cars, total_motor
+    SELECT parking_lot_id, name, area, total_cars, total_motor
     FROM `parking-history-taipei.taipei_parking.parking_lots`
     WHERE total_cars > 0
     ORDER BY name
@@ -68,12 +68,12 @@ parking_lots = get_parking_lots()
 selected_lot_name = st.sidebar.selectbox(
     "選擇停車場",
     parking_lots['name'].tolist(),
-    index=parking_lots[parking_lots['id'] == 'TPE0410'].index[0] if 'TPE0410' in parking_lots['id'].values else 0
+    index=parking_lots[parking_lots['parking_lot_id'] == 'TPE0410'].index[0] if 'TPE0410' in parking_lots['parking_lot_id'].values else 0
 )
 
 # 取得選中停車場的資訊
 selected_lot = parking_lots[parking_lots['name'] == selected_lot_name].iloc[0]
-parking_lot_id = selected_lot['id']
+parking_lot_id = selected_lot['parking_lot_id']
 total_cars = int(selected_lot['total_cars'])
 
 # 顯示停車場資訊
