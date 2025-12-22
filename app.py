@@ -64,11 +64,18 @@ st.sidebar.header("篩選條件")
 # 取得停車場清單
 parking_lots = get_parking_lots()
 
+# 找出預設停車場的位置
+default_index = 0
+if 'TPE0410' in parking_lots['parking_lot_id'].values:
+    matches = parking_lots[parking_lots['parking_lot_id'] == 'TPE0410'].index.tolist()
+    if len(matches) > 0:
+        default_index = parking_lots.index.get_loc(matches[0])
+
 # 停車場選擇器
 selected_lot_name = st.sidebar.selectbox(
     "選擇停車場",
     parking_lots['name'].tolist(),
-    index=parking_lots[parking_lots['parking_lot_id'] == 'TPE0410'].index[0] if 'TPE0410' in parking_lots['parking_lot_id'].values else 0
+    index=default_index
 )
 
 # 取得選中停車場的資訊
