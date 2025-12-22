@@ -1,0 +1,47 @@
+# Taipei Parking Data Collection System
+
+## Project Context
+This is a Google Cloud Function that automatically collects real-time parking availability data from Taipei City's 706 parking facilities every 5 minutes, storing it in BigQuery for long-term analysis.
+
+## User Profile
+- The user is a parking lot contractor with NO coding or technical experience
+- Always provide step-by-step instructions with detailed explanations
+- Use Traditional Chinese (繁體中文) for comments and explanations
+- Never assume the user knows how to do anything technical
+- When there's a simpler way to do something, proactively suggest it
+
+## Technical Stack
+- Runtime: Google Cloud Functions (Python 3.11)
+- Database: BigQuery (dataset: taipei_parking, table: realtime_spots)
+- Scheduler: Cloud Scheduler (every 5 minutes)
+- Data Source: Taipei City Parking API
+
+## API Endpoints
+- Real-time availability: https://tcgbusfs.blob.core.windows.net/blobtcmsv/TCMSV_allavailable.json
+- Static facility info: https://tcgbusfs.blob.core.windows.net/blobtcmsv/TCMSV_alldesc.json
+
+## BigQuery Schema
+- id: STRING (parking lot code, e.g., TPE0410)
+- availablecar: INTEGER (available car spaces, -9 means no data)
+- availablemotor: INTEGER (available motorcycle spaces)
+- availablebus: INTEGER (available bus spaces)
+- fetched_at: TIMESTAMP (UTC time, Taiwan is UTC+8)
+
+## Important Rules
+1. After ANY code modification, remind the user to redeploy to Cloud Functions
+2. Keep code simple and well-commented
+3. Filter out invalid data (availablecar = -9)
+4. Always consider timezone: API returns UTC, Taiwan is UTC+8
+5. Use daily partitioning on fetched_at for query optimization
+
+## When Modifying Code
+- Show the complete modified file, not just snippets
+- Explain what changed and why
+- Provide the exact deployment command
+- Warn about any potential issues or costs
+
+## Response Format
+- Use Traditional Chinese (繁體中文), not Simplified Chinese
+- Technical terms can remain in English
+- Be analytical and substantive, skip flattery
+- Provide exhaustive details unless brevity is requested
