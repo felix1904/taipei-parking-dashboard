@@ -32,6 +32,60 @@ st.markdown("""
         color: #e2e8f0 !important;
         font-size: 1rem !important;
     }
+
+    /* 側邊欄標題 (### 篩選條件) */
+    [data-testid="stSidebar"] h3 {
+        color: white !important;
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+    }
+
+    /* 側邊欄小標題 (##### 資料期間、顯示設定) */
+    [data-testid="stSidebar"] h5 {
+        color: white !important;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        margin-top: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* 側邊欄 Selectbox/DateInput 標籤 */
+    [data-testid="stSidebar"] .stSelectbox label,
+    [data-testid="stSidebar"] .stDateInput label {
+        color: white !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+    }
+
+    /* 側邊欄 Radio 標籤 */
+    [data-testid="stSidebar"] .stRadio > label {
+        color: white !important;
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {
+        color: white !important;
+        font-size: 0.95rem !important;
+    }
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {
+        color: white !important;
+    }
+
+    /* 表單提交按鈕（更新圖表） */
+    [data-testid="stSidebar"] button[kind="primaryFormSubmit"],
+    [data-testid="stSidebar"] .stFormSubmitButton button {
+        background: linear-gradient(135deg, #0ea5e9, #8b5cf6) !important;
+        color: white !important;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stSidebar"] button[kind="primaryFormSubmit"]:hover,
+    [data-testid="stSidebar"] .stFormSubmitButton button:hover {
+        opacity: 0.9 !important;
+    }
     
     /* 標題區域 */
     .dashboard-header {
@@ -66,6 +120,7 @@ st.markdown("""
         overflow: hidden;
         margin-bottom: 1rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        min-height: 160px;
     }
     .metric-card::before {
         content: '';
@@ -82,14 +137,14 @@ st.markdown("""
     .metric-card.violet::before { background: linear-gradient(90deg, #a78bfa, transparent); }
     
     .metric-label {
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: #cbd5e1;
         margin-bottom: 0.5rem;
         font-weight: 600;
         letter-spacing: 0.5px;
     }
     .metric-value {
-        font-size: 2.4rem;
+        font-size: 2rem;
         font-weight: 800;
         line-height: 1.2;
     }
@@ -98,9 +153,9 @@ st.markdown("""
     .metric-value.rose { color: #fb7185; }
     .metric-value.amber { color: #fbbf24; }
     .metric-value.violet { color: #a78bfa; }
-    
+
     .metric-sub {
-        font-size: 0.95rem;
+        font-size: 1.1rem;
         color: #94a3b8;
         margin-top: 0.5rem;
     }
@@ -138,10 +193,31 @@ st.markdown("""
         justify-content: center;
         gap: 1.5rem;
         flex-wrap: wrap;
-        margin-top: 1.5rem;
+        margin-top: 0;
+        margin-bottom: 2rem;
         padding: 1rem;
         background: rgba(255,255,255,0.03);
         border-radius: 12px;
+    }
+
+    /* 調整 Plotly 圖表上方的間距 */
+    [data-testid="stPlotlyChart"] {
+        margin-top: 0;
+    }
+
+    /* 區塊分隔器 */
+    .section-divider {
+        height: 2rem;
+    }
+
+    /* Streamlit subheader 樣式（配合圖表標題） */
+    [data-testid="stSubheader"] {
+        color: white !important;
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        padding-left: 0.75rem !important;
+        border-left: 6px solid #0ea5e9 !important;
+        margin-bottom: 0.5rem !important;
     }
     .legend-item {
         display: flex;
@@ -158,14 +234,24 @@ st.markdown("""
     }
     
     /* UI 元件覆寫 */
-    .stSelectbox label, .stDateInput label, .stRadio label {
+    .stSelectbox label, .stDateInput label {
         color: #ffffff !important;
         font-weight: 600;
         font-size: 1.05rem !important;
     }
+
+    /* Radio 按鈕樣式 */
+    .stRadio > label {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 1.2rem !important;
+    }
     .stRadio div[role="radiogroup"] label {
-        color: #e2e8f0 !important;
-        font-size: 1rem !important;
+        color: #ffffff !important;
+        font-size: 1.1rem !important;
+    }
+    .stRadio div[role="radiogroup"] label p {
+        color: #ffffff !important;
     }
     
     .footer {
@@ -374,11 +460,7 @@ trend_df = df.set_index('taipei_time').resample(gran).agg({'available_cars': 'me
 trend_df.columns = ['time', 'available', 'usage_rate']
 
 # ===== 主圖表：趨勢圖 =====
-st.markdown("""
-<div class="chart-card">
-    <div class="chart-title">剩餘車位趨勢圖</div>
-</div>
-""", unsafe_allow_html=True)
+st.subheader("📊 剩餘車位趨勢圖")
 
 if display_metric == "剩餘車位":
     fig_main = go.Figure()
@@ -407,35 +489,40 @@ else:
     y_range = [0, 105]
     y_title = '使用率 (%)'
 
-# [修改]: 更新字體顏色與大小
 fig_main.update_layout(
     paper_bgcolor='#1e293b',
     plot_bgcolor='#1e293b',
     font=dict(color='#e2e8f0', size=14),
-    margin=dict(l=40, r=40, t=40, b=40),
+    margin=dict(l=40, r=40, t=20, b=40),
     height=450,
     yaxis_title=y_title,
     xaxis_title='時間',
-    xaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', zerolinecolor='rgba(51, 65, 85, 0.5)'),
-    yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', zerolinecolor='rgba(51, 65, 85, 0.5)', range=y_range),
+    xaxis=dict(
+        gridcolor='rgba(51, 65, 85, 0.5)',
+        zerolinecolor='rgba(51, 65, 85, 0.5)',
+        tickfont=dict(size=16, color='white'),
+        title=dict(font=dict(size=16, color='white'))
+    ),
+    yaxis=dict(
+        gridcolor='rgba(51, 65, 85, 0.5)',
+        zerolinecolor='rgba(51, 65, 85, 0.5)',
+        range=y_range,
+        tickfont=dict(size=16, color='white'),
+        title=dict(font=dict(size=16, color='white'))
+    ),
     hovermode='x unified'
 )
-st.plotly_chart(fig_main, use_container_width=True)
+st.plotly_chart(fig_main, use_container_width=True, config={'displayModeBar': True})
 
 # ===== 雙圖表區：時段分析 + 每日比較 =====
 col_left, col_right = st.columns(2)
 
 with col_left:
-    st.markdown("""
-    <div class="chart-card">
-        <div class="chart-title">各時段平均使用率</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
+    st.subheader("📊 各時段平均使用率")
+
     hourly_df = df.groupby('hour').agg({'usage_rate': 'mean'}).reset_index()
-    
+
     fig_hourly = go.Figure()
-    # [修改]: 移除 cornerradius 參數以修復錯誤
     fig_hourly.add_trace(go.Bar(
         x=hourly_df['hour'],
         y=hourly_df['usage_rate'],
@@ -446,31 +533,38 @@ with col_left:
         paper_bgcolor='#1e293b',
         plot_bgcolor='#1e293b',
         font=dict(color='#e2e8f0', size=14),
-        margin=dict(l=40, r=40, t=40, b=40),
+        margin=dict(l=40, r=40, t=20, b=40),
         height=380,
         yaxis_title='平均使用率 (%)',
         xaxis_title='小時',
-        xaxis=dict(tickmode='linear', tick0=0, dtick=2, gridcolor='rgba(51, 65, 85, 0.5)'),
-        yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', range=[0, 100])
+        xaxis=dict(
+            tickmode='linear',
+            tick0=0,
+            dtick=2,
+            gridcolor='rgba(51, 65, 85, 0.5)',
+            tickfont=dict(size=16, color='white'),
+            title=dict(font=dict(size=16, color='white'))
+        ),
+        yaxis=dict(
+            gridcolor='rgba(51, 65, 85, 0.5)',
+            range=[0, 100],
+            tickfont=dict(size=16, color='white'),
+            title=dict(font=dict(size=16, color='white'))
+        )
     )
-    st.plotly_chart(fig_hourly, use_container_width=True)
+    st.plotly_chart(fig_hourly, use_container_width=True, config={'displayModeBar': True})
 
 with col_right:
-    st.markdown("""
-    <div class="chart-card">
-        <div class="chart-title">每日使用率比較</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
+    st.subheader("📅 每日使用率比較")
+
     daily_df = df.groupby(['date_str', 'day_of_week']).agg({'usage_rate': 'mean'}).reset_index()
     daily_df['is_weekend'] = daily_df['day_of_week'].isin([1, 7])
     day_names = ['', '日', '一', '二', '三', '四', '五', '六']
     daily_df['label'] = daily_df.apply(lambda x: f"{x['date_str'][5:]} ({day_names[int(x['day_of_week'])]})", axis=1)
-    
+
     colors = ['#a78bfa' if w else '#22d3ee' for w in daily_df['is_weekend']]
-    
+
     fig_daily = go.Figure()
-    # [修改]: 移除 cornerradius 參數以修復錯誤
     fig_daily.add_trace(go.Bar(
         x=daily_df['label'],
         y=daily_df['usage_rate'],
@@ -481,198 +575,205 @@ with col_right:
         paper_bgcolor='#1e293b',
         plot_bgcolor='#1e293b',
         font=dict(color='#e2e8f0', size=14),
-        margin=dict(l=40, r=40, t=40, b=40),
+        margin=dict(l=40, r=40, t=20, b=40),
         height=380,
         yaxis_title='平均使用率 (%)',
         xaxis_title='日期',
-        xaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', tickangle=-45),
-        yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', range=[0, 100])
+        xaxis=dict(
+            gridcolor='rgba(51, 65, 85, 0.5)',
+            tickangle=-45,
+            tickfont=dict(size=16, color='white'),
+            title=dict(font=dict(size=16, color='white'))
+        ),
+        yaxis=dict(
+            gridcolor='rgba(51, 65, 85, 0.5)',
+            range=[0, 100],
+            tickfont=dict(size=16, color='white'),
+            title=dict(font=dict(size=16, color='white'))
+        )
     )
-    st.plotly_chart(fig_daily, use_container_width=True)
+    st.plotly_chart(fig_daily, use_container_width=True, config={'displayModeBar': True})
 
 # ===== 熱力圖（按星期×時段）=====
-st.markdown("""
-<div class="chart-card">
-    <div class="chart-title">熱力圖（按星期×時段）</div>
-</div>
-""", unsafe_allow_html=True)
+with st.container():
+    st.subheader("🔥 熱力圖（按星期×時段）")
 
-# 切換顯示指標
-heatmap_metric = st.radio(
-    "顯示指標",
-    ["平均使用率 (%)", "平均剩餘車位"],
-    index=0,
-    horizontal=True,
-    key="heatmap_metric"
-)
+    # 切換顯示指標
+    heatmap_metric = st.radio(
+        "顯示指標",
+        ["平均使用率 (%)", "平均剩餘車位"],
+        index=0,
+        horizontal=True,
+        key="heatmap_metric"
+    )
 
-# BigQuery 的 day_of_week: 1=週日, 2=週一, ..., 7=週六
-# 調整順序為週一到週日
-weekday_order = [2, 3, 4, 5, 6, 7, 1]
-weekday_names = {1: '週日', 2: '週一', 3: '週二', 4: '週三', 5: '週四', 6: '週五', 7: '週六'}
+    # BigQuery 的 day_of_week: 1=週日, 2=週一, ..., 7=週六
+    # 調整順序為週一到週日
+    weekday_order = [2, 3, 4, 5, 6, 7, 1]
+    weekday_names = {1: '週日', 2: '週一', 3: '週二', 4: '週三', 5: '週四', 6: '週五', 7: '週六'}
 
-# 根據選擇的指標準備資料
-if heatmap_metric == "平均使用率 (%)":
-    heatmap_data = df.groupby(['day_of_week', 'hour']).agg({'usage_rate': 'mean'}).reset_index()
-    heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='usage_rate')
-    heatmap_pivot = heatmap_pivot.reindex(weekday_order)
-    zmin, zmax = 0, 100
-    colorbar_title = '使用率 (%)'
-    hover_label = '使用率'
-    hover_suffix = '%'
-    # 顏色：0%綠 → 100%紅（使用率越高越紅）
-    custom_colorscale = [
-        [0.0, '#10b981'], [0.6, '#10b981'],   # 0-60% 綠
-        [0.6, '#eab308'], [0.8, '#eab308'],   # 60-80% 黃
-        [0.8, '#f97316'], [0.9, '#f97316'],   # 80-90% 橙
-        [0.9, '#ef4444'], [0.95, '#ef4444'],  # 90-95% 紅
-        [0.95, '#7f1d1d'], [1.0, '#7f1d1d']   # 95%+ 深紅
-    ]
-else:
-    heatmap_data = df.groupby(['day_of_week', 'hour']).agg({'available_cars': 'mean'}).reset_index()
-    heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='available_cars')
-    heatmap_pivot = heatmap_pivot.reindex(weekday_order)
-    zmin, zmax = 0, total_cars
-    colorbar_title = '剩餘車位'
-    hover_label = '剩餘車位'
-    hover_suffix = '格'
-    # 顏色：0格紅 → 滿格綠（剩餘越少越紅，反向）
-    custom_colorscale = [
-        [0.0, '#7f1d1d'], [0.05, '#7f1d1d'],  # 0-5% 深紅
-        [0.05, '#ef4444'], [0.1, '#ef4444'],  # 5-10% 紅
-        [0.1, '#f97316'], [0.2, '#f97316'],   # 10-20% 橙
-        [0.2, '#eab308'], [0.4, '#eab308'],   # 20-40% 黃
-        [0.4, '#10b981'], [1.0, '#10b981']    # 40%+ 綠
-    ]
+    # 根據選擇的指標準備資料
+    if heatmap_metric == "平均使用率 (%)":
+        heatmap_data = df.groupby(['day_of_week', 'hour']).agg({'usage_rate': 'mean'}).reset_index()
+        heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='usage_rate')
+        heatmap_pivot = heatmap_pivot.reindex(weekday_order)
+        zmin, zmax = 0, 100
+        colorbar_title = '使用率 (%)'
+        hover_label = '使用率'
+        hover_suffix = '%'
+        # 顏色：0%綠 → 100%紅（使用率越高越紅）
+        custom_colorscale = [
+            [0.0, '#10b981'], [0.6, '#10b981'],   # 0-60% 綠
+            [0.6, '#eab308'], [0.8, '#eab308'],   # 60-80% 黃
+            [0.8, '#f97316'], [0.9, '#f97316'],   # 80-90% 橙
+            [0.9, '#ef4444'], [0.95, '#ef4444'],  # 90-95% 紅
+            [0.95, '#7f1d1d'], [1.0, '#7f1d1d']   # 95%+ 深紅
+        ]
+    else:
+        heatmap_data = df.groupby(['day_of_week', 'hour']).agg({'available_cars': 'mean'}).reset_index()
+        heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='available_cars')
+        heatmap_pivot = heatmap_pivot.reindex(weekday_order)
+        zmin, zmax = 0, total_cars
+        colorbar_title = '剩餘車位'
+        hover_label = '剩餘車位'
+        hover_suffix = '格'
+        # 顏色：0格紅 → 滿格綠（剩餘越少越紅，反向）
+        custom_colorscale = [
+            [0.0, '#7f1d1d'], [0.05, '#7f1d1d'],  # 0-5% 深紅
+            [0.05, '#ef4444'], [0.1, '#ef4444'],  # 5-10% 紅
+            [0.1, '#f97316'], [0.2, '#f97316'],   # 10-20% 橙
+            [0.2, '#eab308'], [0.4, '#eab308'],   # 20-40% 黃
+            [0.4, '#10b981'], [1.0, '#10b981']    # 40%+ 綠
+        ]
 
-y_labels = [weekday_names[d] for d in weekday_order]
+    y_labels = [weekday_names[d] for d in weekday_order]
 
-# 處理沒有資料的格子：顯示灰色空白
-text_values = heatmap_pivot.copy()
-text_values = text_values.round(0).astype('Int64').astype(str)  # Int64 支援 NaN
-text_values = text_values.replace('<NA>', '')  # NaN 顯示為空白
+    # 處理沒有資料的格子：顯示灰色空白
+    text_values = heatmap_pivot.copy()
+    text_values = text_values.round(0).astype('Int64').astype(str)  # Int64 支援 NaN
+    text_values = text_values.replace('<NA>', '')  # NaN 顯示為空白
 
-fig_heatmap = go.Figure(data=go.Heatmap(
-    z=heatmap_pivot.values,
-    x=heatmap_pivot.columns,
-    y=y_labels,
-    colorscale=custom_colorscale,
-    zmin=zmin,
-    zmax=zmax,
-    text=text_values.values,
-    texttemplate='%{text}',
-    textfont=dict(size=11, color='white'),
-    colorbar=dict(title=dict(text=colorbar_title, side='right'), tickfont=dict(color='#e2e8f0')),
-    hovertemplate=f'星期: %{{y}}<br>時段: %{{x}}:00<br>{hover_label}: %{{z:.1f}}{hover_suffix}<extra></extra>',
-    xgap=1,  # 格子間隙，讓灰色背景更明顯
-    ygap=1
-))
+    fig_heatmap = go.Figure(data=go.Heatmap(
+        z=heatmap_pivot.values,
+        x=heatmap_pivot.columns,
+        y=y_labels,
+        colorscale=custom_colorscale,
+        zmin=zmin,
+        zmax=zmax,
+        text=text_values.values,
+        texttemplate='%{text}',
+        textfont=dict(size=11, color='white'),
+        colorbar=dict(title=dict(text=colorbar_title, side='right'), tickfont=dict(color='#e2e8f0')),
+        hovertemplate=f'星期: %{{y}}<br>時段: %{{x}}:00<br>{hover_label}: %{{z:.1f}}{hover_suffix}<extra></extra>',
+        xgap=1,  # 格子間隙，讓灰色背景更明顯
+        ygap=1
+    ))
 
-fig_heatmap.update_layout(
-    paper_bgcolor='#1e293b',
-    plot_bgcolor='#1e293b',
-    font=dict(color='#e2e8f0', size=14),
-    margin=dict(l=40, r=40, t=40, b=40),
-    height=350,
-    xaxis_title='小時',
-    yaxis_title='星期',
-    xaxis=dict(tickmode='linear', tick0=0, dtick=1, gridcolor='rgba(51, 65, 85, 0.5)'),
-    yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)')
-)
-st.plotly_chart(fig_heatmap, use_container_width=True)
+    fig_heatmap.update_layout(
+        paper_bgcolor='#1e293b',
+        plot_bgcolor='#1e293b',
+        font=dict(color='#e2e8f0', size=14),
+        margin=dict(l=40, r=40, t=40, b=40),
+        height=350,
+        xaxis_title='小時',
+        yaxis_title='星期',
+        xaxis=dict(tickmode='linear', tick0=0, dtick=1, gridcolor='rgba(51, 65, 85, 0.5)'),
+        yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)')
+    )
+    st.plotly_chart(fig_heatmap, use_container_width=True, config={'displayModeBar': True})
 
-# [修改]: 更新圖例說明以配合新的顏色級距
-st.markdown("""
-<div class="legend-container">
-    <div class="legend-item">
-        <div class="legend-color" style="background: #10b981;"></div>
-        <span>舒適 (<60%)</span>
+    # 圖例說明（緊貼熱力圖下方）
+    st.markdown("""
+    <div class="legend-container">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #10b981;"></div>
+            <span>舒適 (<60%)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #eab308;"></div>
+            <span>普通 (60-80%)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #f97316;"></div>
+            <span>繁忙 (80-90%)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ef4444;"></div>
+            <span>擁擠 (90-95%)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #7f1d1d;"></div>
+            <span>滿位 (>95%)</span>
+        </div>
     </div>
-    <div class="legend-item">
-        <div class="legend-color" style="background: #eab308;"></div>
-        <span>普通 (60-80%)</span>
-    </div>
-    <div class="legend-item">
-        <div class="legend-color" style="background: #f97316;"></div>
-        <span>繁忙 (80-90%)</span>
-    </div>
-    <div class="legend-item">
-        <div class="legend-color" style="background: #ef4444;"></div>
-        <span>擁擠 (90-95%)</span>
-    </div>
-    <div class="legend-item">
-        <div class="legend-color" style="background: #7f1d1d;"></div>
-        <span>滿位 (>95%)</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # ===== 週間 vs 週末曲線 =====
-st.markdown("""
-<div class="chart-card">
-    <div class="chart-title">週間 vs 週末 24小時使用率曲線</div>
-</div>
-""", unsafe_allow_html=True)
+# 區塊分隔器
+st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
-weekday_hourly = df[~df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
-weekend_hourly = df[df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
+with st.container():
+    st.subheader("📈 週間 vs 週末 24小時使用率曲線")
 
-# X 軸刻度標籤
-hour_labels = [f'{h}時' for h in range(24)]
-# Hover 用的標籤（加上「時間：」前綴）
-hour_hover_labels = [f'時間：{h}時' for h in range(24)]
+    weekday_hourly = df[~df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
+    weekend_hourly = df[df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
 
-fig_ww = go.Figure()
-if not weekday_hourly.empty:
-    fig_ww.add_trace(go.Scatter(
-        x=hour_labels[:len(weekday_hourly)],  # 使用文字標籤
-        y=weekday_hourly['usage_rate'],
-        mode='lines+markers',
-        fill='tozeroy',
-        line=dict(color='#22d3ee', width=3),
-        marker=dict(color='#22d3ee', size=6),
-        fillcolor='rgba(34, 211, 238, 0.1)',
-        name='週間平均',
-        customdata=[hour_hover_labels[h] for h in weekday_hourly['hour']],
-        hovertemplate='%{y:.2f}%<extra></extra>'
-    ))
-if not weekend_hourly.empty:
-    fig_ww.add_trace(go.Scatter(
-        x=hour_labels[:len(weekend_hourly)],  # 使用文字標籤
-        y=weekend_hourly['usage_rate'],
-        mode='lines+markers',
-        fill='tozeroy',
-        line=dict(color='#a78bfa', width=3),
-        marker=dict(color='#a78bfa', size=6),
-        fillcolor='rgba(167, 139, 250, 0.1)',
-        name='週末平均',
-        customdata=[hour_hover_labels[h] for h in weekend_hourly['hour']],
-        hovertemplate='%{y:.2f}%<extra></extra>'
-    ))
+    # X 軸刻度標籤
+    hour_labels = [f'{h}時' for h in range(24)]
+    # Hover 用的標籤（加上「時間：」前綴）
+    hour_hover_labels = [f'時間：{h}時' for h in range(24)]
 
-fig_ww.update_layout(
-    paper_bgcolor='#1e293b',
-    plot_bgcolor='#1e293b',
-    font=dict(color='#e2e8f0', size=14),
-    margin=dict(l=40, r=40, t=40, b=40),
-    height=380,
-    xaxis_title='時間',
-    yaxis_title='使用率 (%)',
-    xaxis=dict(
-        categoryorder='array',
-        categoryarray=hour_labels,
-        gridcolor='rgba(51, 65, 85, 0.5)',
-        tickfont=dict(size=16, color='white')
-    ),
-    yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', range=[0, 100], tickfont=dict(size=16, color='white')),
-    legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5, font=dict(color='#e2e8f0')),
-    hovermode='x unified',
-    hoverlabel=dict(font_size=18, namelength=-1)
-)
+    fig_ww = go.Figure()
+    if not weekday_hourly.empty:
+        fig_ww.add_trace(go.Scatter(
+            x=hour_labels[:len(weekday_hourly)],  # 使用文字標籤
+            y=weekday_hourly['usage_rate'],
+            mode='lines+markers',
+            fill='tozeroy',
+            line=dict(color='#22d3ee', width=3),
+            marker=dict(color='#22d3ee', size=6),
+            fillcolor='rgba(34, 211, 238, 0.1)',
+            name='週間平均',
+            customdata=[hour_hover_labels[h] for h in weekday_hourly['hour']],
+            hovertemplate='%{y:.2f}%<extra></extra>'
+        ))
+    if not weekend_hourly.empty:
+        fig_ww.add_trace(go.Scatter(
+            x=hour_labels[:len(weekend_hourly)],  # 使用文字標籤
+            y=weekend_hourly['usage_rate'],
+            mode='lines+markers',
+            fill='tozeroy',
+            line=dict(color='#a78bfa', width=3),
+            marker=dict(color='#a78bfa', size=6),
+            fillcolor='rgba(167, 139, 250, 0.1)',
+            name='週末平均',
+            customdata=[hour_hover_labels[h] for h in weekend_hourly['hour']],
+            hovertemplate='%{y:.2f}%<extra></extra>'
+        ))
 
-# 修改 unified hover 的標題格式
-fig_ww.update_xaxes(ticklabelposition='outside', showspikes=True, spikemode='across', spikethickness=1)
-st.plotly_chart(fig_ww, use_container_width=True)
+    fig_ww.update_layout(
+        paper_bgcolor='#1e293b',
+        plot_bgcolor='#1e293b',
+        font=dict(color='#e2e8f0', size=14),
+        margin=dict(l=40, r=40, t=40, b=40),
+        height=380,
+        xaxis_title='時間',
+        yaxis_title='使用率 (%)',
+        xaxis=dict(
+            categoryorder='array',
+            categoryarray=hour_labels,
+            gridcolor='rgba(51, 65, 85, 0.5)',
+            tickfont=dict(size=16, color='white')
+        ),
+        yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', range=[0, 100], tickfont=dict(size=16, color='white')),
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5, font=dict(color='#e2e8f0')),
+        hovermode='x unified',
+        hoverlabel=dict(font_size=18, namelength=-1)
+    )
+
+    # 修改 unified hover 的標題格式
+    fig_ww.update_xaxes(ticklabelposition='outside', showspikes=True, spikemode='across', spikethickness=1)
+    st.plotly_chart(fig_ww, use_container_width=True, config={'displayModeBar': True})
 
 # ===== 頁尾 =====
 st.markdown(f"""
