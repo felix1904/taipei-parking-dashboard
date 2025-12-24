@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 from google.cloud import bigquery
 from google.oauth2 import service_account
 from datetime import datetime, timedelta
-import numpy as np
 
 # ===== 頁面設定 =====
 st.set_page_config(
@@ -229,48 +228,52 @@ def get_parking_data(parking_lot_id, start_date, end_date, total_cars):
 # ===== 側邊欄：篩選條件 =====
 with st.sidebar:
     st.markdown("### 🔍 篩選條件")
-    
+
+    # 停車場清單（靜態資料，放在 form 外面）
     parking_lots = get_parking_lots()
-    
+
     default_index = 0
     if 'TPE0410' in parking_lots['parking_lot_id'].values:
         matches = parking_lots[parking_lots['parking_lot_id'] == 'TPE0410'].index.tolist()
         if len(matches) > 0:
             default_index = parking_lots.index.get_loc(matches[0])
-    
-    selected_lot_name = st.selectbox(
-        "選擇停車場",
-        parking_lots['name'].tolist(),
-        index=default_index
-    )
-    
+
+    # 使用 form 包住所有篩選條件，按按鈕才更新
+    with st.form(key="filter_form"):
+        selected_lot_name = st.selectbox(
+            "選擇停車場",
+            parking_lots['name'].tolist(),
+            index=default_index
+        )
+
+        st.markdown("##### 📅 資料期間")
+        start_date = st.date_input("開始日期", datetime.now() - timedelta(days=7))
+        end_date = st.date_input("結束日期", datetime.now())
+
+        st.markdown("##### ⏱️ 顯示設定")
+        time_granularity = st.radio(
+            "時間粒度",
+            ["5 分鐘", "15 分鐘", "30 分鐘", "1 小時", "4 小時"],
+            index=0,
+            horizontal=True
+        )
+
+        display_metric = st.radio(
+            "顯示指標",
+            ["剩餘車位", "使用率"],
+            index=0,
+            horizontal=True
+        )
+
+        # 提交按鈕
+        st.form_submit_button("🔄 更新圖表", use_container_width=True)
+
+    # 從選擇的停車場名稱取得相關資訊
     selected_lot = parking_lots[parking_lots['name'] == selected_lot_name].iloc[0]
     parking_lot_id = selected_lot['parking_lot_id']
     total_cars = int(selected_lot['total_cars'])
     total_motor = int(selected_lot['total_motor'])
     area = selected_lot['area']
-    
-    st.markdown("---")
-    
-    st.markdown("##### 📅 資料期間")
-    start_date = st.date_input("開始日期", datetime.now() - timedelta(days=7))
-    end_date = st.date_input("結束日期", datetime.now())
-    
-    st.markdown("---")
-    
-    time_granularity = st.radio(
-        "時間粒度",
-        ["5 分鐘", "15 分鐘", "30 分鐘", "1 小時", "4 小時"],
-        index=0,
-        horizontal=True
-    )
-    
-    display_metric = st.radio(
-        "顯示指標",
-        ["剩餘車位", "使用率"],
-        index=0,
-        horizontal=True
-    )
 
 # ===== 讀取資料 =====
 with st.spinner('載入資料中...'):
@@ -487,41 +490,82 @@ with col_right:
     )
     st.plotly_chart(fig_daily, use_container_width=True)
 
-# ===== 熱力圖 (重點修改區) =====
+# ===== 熱力圖（按星期×時段）=====
 st.markdown("""
 <div class="chart-card">
-    <div class="chart-title">使用率熱力圖（按日期×時段）</div>
+    <div class="chart-title">熱力圖（按星期×時段）</div>
 </div>
 """, unsafe_allow_html=True)
 
-heatmap_data = df.groupby(['date_str', 'hour']).agg({'usage_rate': 'mean'}).reset_index()
-heatmap_pivot = heatmap_data.pivot(index='date_str', columns='hour', values='usage_rate')
+# 切換顯示指標
+heatmap_metric = st.radio(
+    "顯示指標",
+    ["平均使用率 (%)", "平均剩餘車位"],
+    index=0,
+    horizontal=True,
+    key="heatmap_metric"
+)
 
-# [修改]: 重新定義顏色級距，針對高使用率停車場優化
-# 舊版: >65% 就是紅色，導致全紅
-# 新版: 拉開高使用率的層次，90%以上才紅，95%以上紫紅
-custom_colorscale = [
-    [0.0, '#10b981'],    # 0-60%  綠色 (舒適)
-    [0.6, '#10b981'],
-    [0.6, '#eab308'],    # 60-80% 黃色 (普通)
-    [0.8, '#eab308'],
-    [0.8, '#f97316'],    # 80-90% 橙色 (繁忙)
-    [0.9, '#f97316'],
-    [0.9, '#ef4444'],    # 90-95% 紅色 (擁擠)
-    [0.95, '#ef4444'],
-    [0.95, '#7f1d1d'],   # 95%+   深紅紫 (滿位/需排隊)
-    [1.0, '#7f1d1d']
-]
+# BigQuery 的 day_of_week: 1=週日, 2=週一, ..., 7=週六
+# 調整順序為週一到週日
+weekday_order = [2, 3, 4, 5, 6, 7, 1]
+weekday_names = {1: '週日', 2: '週一', 3: '週二', 4: '週三', 5: '週四', 6: '週五', 7: '週六'}
+
+# 根據選擇的指標準備資料
+if heatmap_metric == "平均使用率 (%)":
+    heatmap_data = df.groupby(['day_of_week', 'hour']).agg({'usage_rate': 'mean'}).reset_index()
+    heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='usage_rate')
+    heatmap_pivot = heatmap_pivot.reindex(weekday_order)
+    zmin, zmax = 0, 100
+    colorbar_title = '使用率 (%)'
+    hover_label = '使用率'
+    hover_suffix = '%'
+    # 顏色：0%綠 → 100%紅（使用率越高越紅）
+    custom_colorscale = [
+        [0.0, '#10b981'], [0.6, '#10b981'],   # 0-60% 綠
+        [0.6, '#eab308'], [0.8, '#eab308'],   # 60-80% 黃
+        [0.8, '#f97316'], [0.9, '#f97316'],   # 80-90% 橙
+        [0.9, '#ef4444'], [0.95, '#ef4444'],  # 90-95% 紅
+        [0.95, '#7f1d1d'], [1.0, '#7f1d1d']   # 95%+ 深紅
+    ]
+else:
+    heatmap_data = df.groupby(['day_of_week', 'hour']).agg({'available_cars': 'mean'}).reset_index()
+    heatmap_pivot = heatmap_data.pivot(index='day_of_week', columns='hour', values='available_cars')
+    heatmap_pivot = heatmap_pivot.reindex(weekday_order)
+    zmin, zmax = 0, total_cars
+    colorbar_title = '剩餘車位'
+    hover_label = '剩餘車位'
+    hover_suffix = '格'
+    # 顏色：0格紅 → 滿格綠（剩餘越少越紅，反向）
+    custom_colorscale = [
+        [0.0, '#7f1d1d'], [0.05, '#7f1d1d'],  # 0-5% 深紅
+        [0.05, '#ef4444'], [0.1, '#ef4444'],  # 5-10% 紅
+        [0.1, '#f97316'], [0.2, '#f97316'],   # 10-20% 橙
+        [0.2, '#eab308'], [0.4, '#eab308'],   # 20-40% 黃
+        [0.4, '#10b981'], [1.0, '#10b981']    # 40%+ 綠
+    ]
+
+y_labels = [weekday_names[d] for d in weekday_order]
+
+# 處理沒有資料的格子：顯示灰色空白
+text_values = heatmap_pivot.copy()
+text_values = text_values.round(0).astype('Int64').astype(str)  # Int64 支援 NaN
+text_values = text_values.replace('<NA>', '')  # NaN 顯示為空白
 
 fig_heatmap = go.Figure(data=go.Heatmap(
     z=heatmap_pivot.values,
     x=heatmap_pivot.columns,
-    y=heatmap_pivot.index,
+    y=y_labels,
     colorscale=custom_colorscale,
-    zmin=0,
-    zmax=100,
-    colorbar=dict(title='使用率 (%)', titleside='right', tickfont=dict(color='#e2e8f0')),
-    hovertemplate='日期: %{y}<br>時段: %{x}:00<br>使用率: %{z:.1f}%<extra></extra>'
+    zmin=zmin,
+    zmax=zmax,
+    text=text_values.values,
+    texttemplate='%{text}',
+    textfont=dict(size=11, color='white'),
+    colorbar=dict(title=dict(text=colorbar_title, side='right'), tickfont=dict(color='#e2e8f0')),
+    hovertemplate=f'星期: %{{y}}<br>時段: %{{x}}:00<br>{hover_label}: %{{z:.1f}}{hover_suffix}<extra></extra>',
+    xgap=1,  # 格子間隙，讓灰色背景更明顯
+    ygap=1
 ))
 
 fig_heatmap.update_layout(
@@ -529,11 +573,11 @@ fig_heatmap.update_layout(
     plot_bgcolor='#1e293b',
     font=dict(color='#e2e8f0', size=14),
     margin=dict(l=40, r=40, t=40, b=40),
-    height=max(300, len(heatmap_pivot) * 35), # 稍微增加每行高度
+    height=350,
     xaxis_title='小時',
-    yaxis_title='日期',
+    yaxis_title='星期',
     xaxis=dict(tickmode='linear', tick0=0, dtick=1, gridcolor='rgba(51, 65, 85, 0.5)'),
-    yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', autorange='reversed')
+    yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)')
 )
 st.plotly_chart(fig_heatmap, use_container_width=True)
 
@@ -573,26 +617,37 @@ st.markdown("""
 weekday_hourly = df[~df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
 weekend_hourly = df[df['is_weekend']].groupby('hour')['usage_rate'].mean().reset_index()
 
+# X 軸刻度標籤
+hour_labels = [f'{h}時' for h in range(24)]
+# Hover 用的標籤（加上「時間：」前綴）
+hour_hover_labels = [f'時間：{h}時' for h in range(24)]
+
 fig_ww = go.Figure()
 if not weekday_hourly.empty:
     fig_ww.add_trace(go.Scatter(
-        x=weekday_hourly['hour'],
+        x=hour_labels[:len(weekday_hourly)],  # 使用文字標籤
         y=weekday_hourly['usage_rate'],
-        mode='lines',
+        mode='lines+markers',
         fill='tozeroy',
         line=dict(color='#22d3ee', width=3),
+        marker=dict(color='#22d3ee', size=6),
         fillcolor='rgba(34, 211, 238, 0.1)',
-        name='週間平均'
+        name='週間平均',
+        customdata=[hour_hover_labels[h] for h in weekday_hourly['hour']],
+        hovertemplate='%{y:.2f}%<extra></extra>'
     ))
 if not weekend_hourly.empty:
     fig_ww.add_trace(go.Scatter(
-        x=weekend_hourly['hour'],
+        x=hour_labels[:len(weekend_hourly)],  # 使用文字標籤
         y=weekend_hourly['usage_rate'],
-        mode='lines',
+        mode='lines+markers',
         fill='tozeroy',
         line=dict(color='#a78bfa', width=3),
+        marker=dict(color='#a78bfa', size=6),
         fillcolor='rgba(167, 139, 250, 0.1)',
-        name='週末平均'
+        name='週末平均',
+        customdata=[hour_hover_labels[h] for h in weekend_hourly['hour']],
+        hovertemplate='%{y:.2f}%<extra></extra>'
     ))
 
 fig_ww.update_layout(
@@ -601,13 +656,22 @@ fig_ww.update_layout(
     font=dict(color='#e2e8f0', size=14),
     margin=dict(l=40, r=40, t=40, b=40),
     height=380,
-    xaxis_title='小時',
+    xaxis_title='時間',
     yaxis_title='使用率 (%)',
-    xaxis=dict(tickmode='linear', tick0=0, dtick=2, gridcolor='rgba(51, 65, 85, 0.5)'),
-    yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', range=[0, 100]),
+    xaxis=dict(
+        categoryorder='array',
+        categoryarray=hour_labels,
+        gridcolor='rgba(51, 65, 85, 0.5)',
+        tickfont=dict(size=16, color='white')
+    ),
+    yaxis=dict(gridcolor='rgba(51, 65, 85, 0.5)', range=[0, 100], tickfont=dict(size=16, color='white')),
     legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5, font=dict(color='#e2e8f0')),
-    hovermode='x unified'
+    hovermode='x unified',
+    hoverlabel=dict(font_size=18, namelength=-1)
 )
+
+# 修改 unified hover 的標題格式
+fig_ww.update_xaxes(ticklabelposition='outside', showspikes=True, spikemode='across', spikethickness=1)
 st.plotly_chart(fig_ww, use_container_width=True)
 
 # ===== 頁尾 =====

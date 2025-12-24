@@ -1,47 +1,43 @@
-# Taipei Parking Data Collection System
+# 台北停車場分析儀表板
 
-## Project Context
-This is a Google Cloud Function that automatically collects real-time parking availability data from Taipei City's 706 parking facilities every 5 minutes, storing it in BigQuery for long-term analysis.
+## 專案簡介
+這是一個 **Streamlit 儀表板**，用於視覺化呈現台北市停車場的歷史使用率資料。
+資料來源是 BigQuery，本專案只負責讀取和呈現，不負責資料收集。
 
-## User Profile
-- The user is a parking lot contractor with NO coding or technical experience
-- Always provide step-by-step instructions with detailed explanations
-- Use Traditional Chinese (繁體中文) for comments and explanations
-- Never assume the user knows how to do anything technical
-- When there's a simpler way to do something, proactively suggest it
+## 使用者背景
+- 使用者是停車場營運承包商，沒有程式設計經驗
+- 請使用繁體中文，提供詳細的步驟說明
+- 如果有更簡單的方法，請主動告知
 
-## Technical Stack
-- Runtime: Google Cloud Functions (Python 3.11)
-- Database: BigQuery (dataset: taipei_parking, table: realtime_spots)
-- Scheduler: Cloud Scheduler (every 5 minutes)
-- Data Source: Taipei City Parking API
+## 技術架構
+- **前端**：Streamlit + Plotly
+- **資料來源**：BigQuery（只讀取）
+- **部署**：Streamlit Cloud
 
-## API Endpoints
-- Real-time availability: https://tcgbusfs.blob.core.windows.net/blobtcmsv/TCMSV_allavailable.json
-- Static facility info: https://tcgbusfs.blob.core.windows.net/blobtcmsv/TCMSV_alldesc.json
+## BigQuery 資料表
 
-## BigQuery Schema
-- id: STRING (parking lot code, e.g., TPE0410)
-- availablecar: INTEGER (available car spaces, -9 means no data)
-- availablemotor: INTEGER (available motorcycle spaces)
-- availablebus: INTEGER (available bus spaces)
-- fetched_at: TIMESTAMP (UTC time, Taiwan is UTC+8)
+### parking_lots（停車場基本資料）
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| parking_lot_id | STRING | 停車場代碼（如 TPE0410） |
+| name | STRING | 停車場名稱 |
+| area | STRING | 所在區域 |
+| total_cars | INTEGER | 汽車總車位數 |
+| total_motor | INTEGER | 機車總車位數 |
 
-## Important Rules
-1. After ANY code modification, remind the user to redeploy to Cloud Functions
-2. Keep code simple and well-commented
-3. Filter out invalid data (availablecar = -9)
-4. Always consider timezone: API returns UTC, Taiwan is UTC+8
-5. Use daily partitioning on fetched_at for query optimization
+### realtime_spots（即時車位快照）
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| parking_lot_id | STRING | 停車場代碼 |
+| available_cars | INTEGER | 汽車剩餘空位 |
+| record_time | TIMESTAMP | 資料記錄時間（UTC） |
 
-## When Modifying Code
-- Show the complete modified file, not just snippets
-- Explain what changed and why
-- Provide the exact deployment command
-- Warn about any potential issues or costs
+## 時區注意
+- BigQuery 儲存 UTC 時間，台灣是 UTC+8
+- 使用 `DATETIME(record_time, 'Asia/Taipei')` 轉換
 
-## Response Format
-- Use Traditional Chinese (繁體中文), not Simplified Chinese
-- Technical terms can remain in English
-- Be analytical and substantive, skip flattery
-- Provide exhaustive details unless brevity is requested
+## 回答規範
+1. 使用繁體中文，不要使用簡體中文
+2. 提供完整程式碼，不要只給片段
+3. 用繁體中文加上註解
+4. 先解釋「為什麼」，再說明「怎麼做」

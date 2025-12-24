@@ -1,67 +1,83 @@
-# 台北停車場資料收集系統
+# 台北停車場分析儀表板
 
 ## 這是什麼？
 
-這個系統會自動收集台北市 706 個停車場的即時空位資料，每 5 分鐘抓一次，存到 Google BigQuery 資料庫。
+這是一個 **Streamlit 儀表板**，用於視覺化呈現台北市停車場的歷史使用率資料。
+
+透過這個儀表板，你可以：
+- 查看任一停車場的車位使用趨勢
+- 分析尖峰/離峰時段
+- 比較平日與假日的使用差異
+- 透過熱力圖快速掌握營運狀況
 
 ## 為什麼要做這個？
 
-累積 5 年的歷史資料，分析每個停車場的：
+累積長期歷史資料，分析每個停車場的營運模式，幫助我們在投標新停車場時，做出更準確的財務預測。
 
-- 尖峰/離峰時段使用率
-- 平日/假日差異
-- 月營收趨勢
-
-這些資料可以幫助我們在投標新停車場時，做出更準確的財務預測。
-
-## 系統架構圖
+## 系統架構
 
 ```
-┌─────────────────┐     每5分鐘觸發      ┌─────────────────┐
-│ Cloud Scheduler │ ──────────────────► │ Cloud Function  │
-└─────────────────┘                      │   (app.py)      │
-                                         └────────┬────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      資料收集（獨立系統）                      │
+│  ┌─────────────────┐                   ┌─────────────────┐  │
+│  │  台北市停車 API  │ ───每5分鐘抓取──► │    BigQuery     │  │
+│  └─────────────────┘                   │  taipei_parking │  │
+│                                        └────────┬────────┘  │
+└─────────────────────────────────────────────────┼───────────┘
                                                   │
-                                                  ▼ 抓取資料
-                                         ┌─────────────────┐
-                                         │  台北市停車API   │
-                                         └────────┬────────┘
-                                                  │
-                                                  ▼ 儲存資料
-                                         ┌─────────────────┐
-                                         │    BigQuery     │
-                                         │ taipei_parking  │
-                                         └─────────────────┘
+                                                  │ 讀取資料
+                                                  ▼
+                          ┌─────────────────────────────────┐
+                          │     本專案：Streamlit 儀表板      │
+                          │          (app.py)               │
+                          └─────────────────────────────────┘
+                                         │
+                                         ▼
+                          ┌─────────────────────────────────┐
+                          │       Streamlit Cloud 部署       │
+                          └─────────────────────────────────┘
 ```
+
+**說明**：資料收集是透過 BigQuery 內建功能執行，與本專案無關。本專案只負責讀取 BigQuery 資料並視覺化呈現。
+
+## 儀表板功能
+
+| 功能 | 說明 |
+|------|------|
+| 指標卡片 | 平均剩餘車位、最高/最低剩餘、尖峰時段 |
+| 趨勢圖 | 可切換 5 分鐘 ~ 4 小時粒度 |
+| 時段分析 | 各小時平均使用率 |
+| 每日比較 | 每日使用率，週末特別標示 |
+| 熱力圖 | 日期 × 時段的使用率矩陣 |
+| 週間 vs 週末 | 24 小時使用率曲線對比 |
 
 ## 檔案說明
 
-| 檔案               | 用途                        |
-| ------------------ | --------------------------- |
-| `app.py`           | Cloud Function 主程式       |
-| `requirements.txt` | Python 套件清單             |
-| `CLAUDE.md`        | 給 Claude Code 看的專案說明 |
-| `.cursorrules`     | 給 Cursor 看的專案說明      |
+| 檔案 | 用途 |
+|------|------|
+| `app.py` | Streamlit 儀表板主程式 |
+| `requirements.txt` | Python 套件清單 |
+| `CLAUDE.md` | 給 Claude Code 看的專案說明 |
+| `.cursorrules` | 給 Cursor 看的專案說明 |
 
 ## 如何修改程式？
 
 1. 用 Cursor 或 Claude Code 開啟這個資料夾
 2. AI 會自動讀取說明文件，了解專案背景
 3. 告訴 AI 你想要修改什麼
-4. 修改後記得重新部署到 Cloud Functions
+4. 修改後 push 到 GitHub，Streamlit Cloud 會自動重新部署
 
-## 重新部署指令
+## 本地開發
 
 ```bash
-gcloud functions deploy 你的函數名稱 \
-  --runtime python311 \
-  --trigger-http \
-  --allow-unauthenticated \
-  --source .
+# 安裝套件
+pip install -r requirements.txt
+
+# 執行儀表板（需要設定 .streamlit/secrets.toml）
+streamlit run app.py
 ```
 
 ## 相關連結
 
 - [BigQuery Console](https://console.cloud.google.com/bigquery)
-- [Cloud Functions Console](https://console.cloud.google.com/functions)
-- [Cloud Scheduler Console](https://console.cloud.google.com/cloudscheduler)# taipei-parking-dashboard
+- [Streamlit Cloud](https://streamlit.io/cloud)
