@@ -1,4 +1,4 @@
-# Streamlit secrets（絕對不能上傳）
+# Streamlit secrets (絕對不能上傳)
 .streamlit/secrets.toml
 
 # Python
@@ -19,3 +19,6 @@ venv/
 .idea/
 .vscode/
 *.swp
+
+# Claude Code 私人設定
+.claude/settings.local.json
