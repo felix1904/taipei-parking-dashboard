@@ -1,4 +1,4 @@
-請產生交接文件，存到 docs/handoff/$ARGUMENTS.md（如果沒給檔名就用今天日期 YYYY-MM-DD.md），格式如下：
+請產生交接文件，存到 docs/handoff/$ARGUMENTS.md（如果沒給檔名就用今天日期 YYYY-MM-DD-hhmm.md），格式如下：
 
 # Session Handoff - [日期時間]
 
