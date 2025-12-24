@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '\\n=== 🚗 台北停車場專案 ===' && echo '\\n📋 檢查最新交接文件...' && if [ -d \"docs/handoff\" ]; then latest=$(ls -t docs/handoff/*.md 2>/dev/null | head -1); if [ -n \"$latest\" ]; then echo \"找到: $latest\"; echo '---'; head -50 \"$latest\"; echo '\\n... (使用 @docs/handoff/ 查看完整內容)'; else echo '沒有找到交接文件'; fi; else echo '尚未建立 docs/handoff/ 資料夾'; fi && echo '\\n===========================\\n'"
+          }
+        ]
+      }
+    ]
+  }
+}
