@@ -1,0 +1,21 @@
+# Streamlit secrets（絕對不能上傳）
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# 環境
+.env
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
